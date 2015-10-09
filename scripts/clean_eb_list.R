@@ -4,19 +4,19 @@ url <- "http://www.etracker.de/lnkcnt.php?et=qPKGYV&url=http://www.gesis.org/fil
 
 dest <- "data_raw/eb_countries-over-time.xlsx"
 
-download.file(url, dest, mode = "wb")
+if(!file.exists(dest)) download.file(url, dest, mode = "wb")
 
-df <- readxl::read_excel(dest, col_names = FALSE)
+eb_list <- readxl::read_excel(dest, col_names = FALSE)
 
-df <- df[c(1, 2, 3, 6) ,]
+eb_list <- eb_list[c(1, 2, 3, 6) ,]
 
-df %<>% as.matrix() %>% t() %>% as.data.frame() %>% tbl_df()
-names(df) <- df[1, ] %>% unlist() %>% make.names()
-df %<>% .[-c(1:4), ]
+eb_list %<>% as.matrix() %>% t() %>% as.data.frame() %>% tbl_df()
+names(eb_list) <- eb_list[1, ] %>% unlist() %>% make.names()
+eb_list %<>% .[-c(1:4), ]
 
-df$Standard.module %<>% str_detect(., "x")
-df$Standard.module[is.na(df$Standard.module)] <- FALSE
+eb_list$Standard.module %<>% str_detect(., "x")
+eb_list$Standard.module[is.na(eb_list$Standard.module)] <- FALSE
 
-df$DOI %<>% paste0("http://dx.doi.org/", .)
+eb_list$DOI %<>% paste0("http://dx.doi.org/", .)
 
-save(df, file = "data_clean/eb_fieldwork_links.RData")
+save(eb_list, file = "data_clean/eb_list.RData")
