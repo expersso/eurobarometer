@@ -5,7 +5,7 @@ gesis_setup <- function(download_dir) {
 
   # set firefox properties to not open download dialog
   fprof <- makeFirefoxProfile(list(
-    browser.download.dir = paste0(getwd(), download_dir),
+    browser.download.dir = paste0(getwd(), "/", download_dir),
     browser.download.folderList = 2L,
     browser.download.manager.showWhenStarting = FALSE,
     browser.helperApps.neverAsk.saveToDisk = "application/octet-stream"))
@@ -14,7 +14,7 @@ gesis_setup <- function(download_dir) {
   RSelenium::startServer()
   remDr <- remoteDriver(extraCapabilities = fprof)
   remDr$open()
-
+  return(remDr)
 }
 
 # Initial login

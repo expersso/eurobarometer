@@ -15,4 +15,3 @@ link <- page %>%
   paste0("https://dbk.gesis.org/dbksearch/", .)
 
 df_eb_links <- data_frame(title, link)
-df_eb_links %>% filter(!str_detect(df_eb_links$title, " \\("))

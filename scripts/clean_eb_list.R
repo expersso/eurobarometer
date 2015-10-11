@@ -4,6 +4,8 @@ url <- "http://www.etracker.de/lnkcnt.php?et=qPKGYV&url=http://www.gesis.org/fil
 
 dest <- "data_raw/eb_countries-over-time.xlsx"
 
+if(!dir.exists("data_raw")) dir.create("data_raw")
+if(!dir.exists("data_clean")) dir.create("data_clean")
 if(!file.exists(dest)) download.file(url, dest, mode = "wb")
 
 eb_list <- readxl::read_excel(dest, col_names = FALSE)
