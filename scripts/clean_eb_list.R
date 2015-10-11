@@ -16,9 +16,19 @@ eb_list %<>% as.matrix() %>% t() %>% as.data.frame() %>% tbl_df()
 names(eb_list) <- eb_list[1, ] %>% unlist() %>% make.names()
 eb_list %<>% .[-c(1:4), ]
 
+eb_list$Eurobarometer.Survey %<>%
+  str_replace_all("\\.", "_") %>%
+  str_replace_all("[[:blank:]]", "")
+
 eb_list$Standard.module %<>% str_detect(., "x")
 eb_list$Standard.module[is.na(eb_list$Standard.module)] <- FALSE
 
-eb_list$DOI %<>% paste0("http://dx.doi.org/", .)
+eb_list$DOI %<>% paste0("http://dx.doi.org/", .) %>% str_replace_all("[[:blank:]]", "")
+eb_list$Fieldwork..month.and.year. %<>% as.character()
+
+eb_list$Fieldwork..month.and.year.[!str_detect(eb_list$Fieldwork..month.and.year., " ")] %<>%
+  as.numeric() %>%
+  as.Date(origin = "1899-12-30") %>%
+  format("%b %Y")
 
 save(eb_list, file = "data_clean/eb_list.RData")
