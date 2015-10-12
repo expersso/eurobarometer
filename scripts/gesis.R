@@ -32,7 +32,7 @@ gesis_login <- function(remDr,
 }
 
 # Go to download page
-gesis_download <- function(remDr, study_id) {
+gesis_download <- function(remDr, study_id, filetype) {
 
   url <- paste0("https://dbk.gesis.org/dbksearch/SDesc2.asp?ll=10&notabs=1&no=",
                 study_id)
@@ -40,7 +40,8 @@ gesis_download <- function(remDr, study_id) {
   remDr$navigate(url)
 
   # Click filename to download .dta file
-  remDr$findElement("xpath", "//a[contains(text(), 'dta')]")$clickElement()
+  file_to_download <- sprintf("//a[contains(text(), '%s')]", filetype)
+  remDr$findElement("xpath", )$clickElement()
 
   # Input purpose and terms of use
   remDr$switchToWindow(remDr$getWindowHandles()[[1]][2])

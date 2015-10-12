@@ -16,7 +16,7 @@ remaining_files <- remaining_files[remaining_files != "4565"] # Weird zip file
 lapply(remaining_files, function(x) {
 
   cat("Downloading study_id: ", x, " - ", format(Sys.time()), "\n", sep = "")
-  gesis_download(remDr = gesis_remDr, x)
+  gesis_download(gesis_remDr, x, "dta")
 
 })
 
@@ -28,7 +28,7 @@ if(!file.exists("data_raw/EB/ZA4565_v4-0-1.dta")) {
 
   gesis_remDr <- gesis_setup(download_dir = "data_raw/EB", "application/zip")
   gesis_login(gesis_remDr, getOption("gesis_user"), getOption("gesis_pass"))
-  try(gesis_download(gesis_remDr, "4565"), silent = TRUE)
+  try(gesis_download(gesis_remDr, "4565", "dta"), silent = TRUE)
   gesis_remDr$close()
   gesis_remDr$closeServer()
 
