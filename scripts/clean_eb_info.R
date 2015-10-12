@@ -9,7 +9,7 @@ eb_info <- "https://dbk.gesis.org/dbksearch/SDesc2.asp?ll=10&notabs=1&no=0986" %
 
 names(eb_info) <- "title"
 
-eb_info$id_number <- eb_info$title %>% str_sub(1, 4) %>% as.numeric()
+eb_info$study_id <- eb_info$title %>% str_sub(1, 4) %>% as.numeric()
 
 eb_info$title %<>% str_replace("[0-9]{4} ", "") %>%
   str_replace("Eurobarometer ", "EB")
@@ -22,8 +22,8 @@ eb_info %<>% separate(title, c("eb_number", "collection_date"),
                          sep = "( \\()", fill = "right") %>%
   mutate(collection_date = str_replace_all(collection_date, "[()]", "") %>% str_trim(),
          eb_number = str_replace_all(eb_number, "[[:blank:]]", "")) %>%
-  select(id_number, eb_number, collection_date)
+  select(study_id, eb_number, collection_date)
 
-eb_info$id_number %<>% str_pad(4, pad = "0")
+eb_info$study_id %<>% str_pad(4, pad = "0")
 
 save(eb_info, file = "data_clean/eb_info.RData")

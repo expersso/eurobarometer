@@ -1,5 +1,5 @@
 # Initiate Selenium server, specify Firefox profile to not ask when downloading
-gesis_setup <- function(download_dir) {
+gesis_setup <- function(download_dir, file_mime = "application/octet-stream") {
 
   library(RSelenium)
 
@@ -8,7 +8,7 @@ gesis_setup <- function(download_dir) {
     browser.download.dir = paste0(getwd(), "/", download_dir),
     browser.download.folderList = 2L,
     browser.download.manager.showWhenStarting = FALSE,
-    browser.helperApps.neverAsk.saveToDisk = "application/octet-stream"))
+    browser.helperApps.neverAsk.saveToDisk = file_mime))
 
   RSelenium::checkForServer()
   RSelenium::startServer()
@@ -32,11 +32,12 @@ gesis_login <- function(remDr,
 }
 
 # Go to download page
-gesis_download <- function(remDr, url) {
-  remDr$navigate(url)
+gesis_download <- function(remDr, study_id) {
 
-  # Click tab "Data & Download"
-  remDr$findElement("xpath", "//a[contains(text(), 'Documents')]")$clickElement()
+  url <- paste0("https://dbk.gesis.org/dbksearch/SDesc2.asp?ll=10&notabs=1&no=",
+                study_id)
+
+  remDr$navigate(url)
 
   # Click filename to download .dta file
   remDr$findElement("xpath", "//a[contains(text(), 'dta')]")$clickElement()
@@ -45,10 +46,10 @@ gesis_download <- function(remDr, url) {
   remDr$switchToWindow(remDr$getWindowHandles()[[1]][2])
 
   # Only check "accept terms of purpose" if unchecked
-  if(remDr$findElement("name",
+  try(if(remDr$findElement("name",
       "projectok")$getElementAttribute("checked")[[1]][1] != "true") {
       remDr$findElement("name", "projectok")$clickElement()
-  }
+  }, silent = TRUE)
 
   remDr$findElement("xpath", "//option[@value='1']")$clickElement()
   remDr$findElement("xpath", "//input[@value='Download']")$clickElement()
