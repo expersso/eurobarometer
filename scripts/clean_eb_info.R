@@ -7,6 +7,8 @@ eb_info <- "https://dbk.gesis.org/dbksearch/SDesc2.asp?ll=10&notabs=1&no=0986" %
   str_trim() %>%
   data_frame()
 
+names(eb_info) <- "title"
+
 eb_info$id_number <- eb_info$title %>% str_sub(1, 4) %>% as.numeric()
 
 eb_info$title %<>% str_replace("[0-9]{4} ", "") %>%

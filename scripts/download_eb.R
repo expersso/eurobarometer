@@ -7,5 +7,9 @@ if(!dir.exists("data_raw/EB")) dir.create("data_raw/EB")
 gesis_remDr <- gesis_setup(download_dir = "data_raw/EB")
 gesis_login(gesis_remDr, getOption("gesis_user"), getOption("gesis_pass"))
 
-download_index <- sample(nrow(eb_list), 3, replace = FALSE)
-lapply(eb_list$DOI[download_index], gesis_download, remDr = gesis_remDr)
+# download_index <- sample(nrow(eb_list), 3, replace = FALSE)
+download_index <- 156:201
+lapply(eb_list$DOI[download_index], function(x) {
+  cat("DOI: ", x)
+  gesis_download(remDr = gesis_remDr, x)
+})
