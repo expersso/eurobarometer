@@ -32,10 +32,10 @@ gesis_login <- function(remDr,
 }
 
 # Go to download page
-gesis_download <- function(remDr, study_id, filetype) {
+gesis_download <- function(remDr, doi, filetype) {
 
   url <- paste0("https://dbk.gesis.org/dbksearch/SDesc2.asp?ll=10&notabs=1&no=",
-                study_id)
+                doi)
 
   remDr$navigate(url)
 
