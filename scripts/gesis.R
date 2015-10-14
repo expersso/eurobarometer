@@ -10,8 +10,8 @@ setup_gesis <- function(download_dir, file_mime = "application/octet-stream") {
     browser.download.manager.showWhenStarting = FALSE,
     browser.helperApps.neverAsk.saveToDisk = file_mime))
 
-  RSelenium::checkForServer()
-  RSelenium::startServer()
+  checkForServer()
+  startServer()
   remDr <- remoteDriver(extraCapabilities = fprof)
   remDr$open()
   return(remDr)

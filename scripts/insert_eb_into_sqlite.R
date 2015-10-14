@@ -11,5 +11,3 @@ lapply(eb_files, function(x) {
 })
 
 rm(df, tbl_name)
-
-
