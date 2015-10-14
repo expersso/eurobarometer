@@ -6,8 +6,8 @@ source("scripts/gesis.R") # gesis Selenium download functions
 
 if(!dir.exists("data_raw/EB")) dir.create("data_raw/EB")
 
-gesis_remDr <- gesis_setup(download_dir = "data_raw/EB")
-gesis_login(gesis_remDr, getOption("gesis_user"), getOption("gesis_pass"))
+gesis_remDr <- setup_gesis(download_dir = "data_raw/EB")
+login_gesis(gesis_remDr, getOption("gesis_user"), getOption("gesis_pass"))
 
 existing_files <- list.files("data_raw/EB") %>% str_sub(3, 6)
 remaining_files <- eb_info$doi[eb_info$doi %nin% existing_files]
@@ -16,7 +16,7 @@ remaining_files <- remaining_files[remaining_files != "4565"] # Weird zip file
 lapply(remaining_files, function(x) {
 
   cat("Downloading DOI: ", x, " - ", format(Sys.time()), "\n", sep = "")
-  gesis_download(gesis_remDr, x, "dta")
+  download_dataset(gesis_remDr, x, "dta")
 
 })
 
@@ -26,9 +26,9 @@ gesis_remDr$closeServer()
 # Deal with single file stored as ".dta.zip"
 if(!file.exists("data_raw/EB/ZA4565_v4-0-1.dta")) {
 
-  gesis_remDr <- gesis_setup(download_dir = "data_raw/EB", "application/zip")
-  gesis_login(gesis_remDr, getOption("gesis_user"), getOption("gesis_pass"))
-  try(gesis_download(gesis_remDr, "4565", "dta"), silent = TRUE)
+  gesis_remDr <- setup_gesis(download_dir = "data_raw/EB", "application/zip")
+  login_gesis(gesis_remDr, getOption("gesis_user"), getOption("gesis_pass"))
+  try(download_dataset(gesis_remDr, "4565", "dta"), silent = TRUE)
   gesis_remDr$close()
   gesis_remDr$closeServer()
 
