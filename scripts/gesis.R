@@ -32,7 +32,7 @@ login_gesis <- function(remDr,
 }
 
 # Go to download page
-download_dataset <- function(remDr, doi, filetype) {
+download_dataset <- function(remDr, doi, filetype = "dta") {
 
   url <- paste0("https://dbk.gesis.org/dbksearch/SDesc2.asp?ll=10&notabs=1&no=",
                 doi)
@@ -60,7 +60,7 @@ download_dataset <- function(remDr, doi, filetype) {
   remDr$switchToWindow(remDr$getWindowHandles()[[1]])
 }
 
-browse_codebook <- function(doi, browseURL = TRUE) {
+browse_codebook <- function(doi, browseURL = TRUE, ...) {
 
   doi <- as.character(doi)
   base_url <- "https://dbk.gesis.org/dbksearch/"
@@ -70,7 +70,7 @@ browse_codebook <- function(doi, browseURL = TRUE) {
   codebook_link_href <- paste0(base_url, html_attr(codebook_link, "href"))
 
   if(browseURL) {
-    browseURL(codebook_link_href)
+    browseURL(codebook_link_href, ...)
   } else {
     return(codebook_link_href)
   }
