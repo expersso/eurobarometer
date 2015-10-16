@@ -2,9 +2,15 @@ library(haven)
 library(labelled) # proper as_factor function
 
 apply_names <- function(df) {
-    names(df) <- sapply(df, function(x) attr(x, "label"))
-    names(df) <- iconv(make.unique(names(df)))
-    df
+
+  # Store original var names as attribute
+  attr(df, "original_var_name") <- names(df)
+
+  # Apply variable names stored as attribute "label"
+  names(df) <- sapply(df, function(x) attr(x, "label"))
+  names(df) <- iconv(make.unique(names(df)))
+
+  df
 }
 
 # Create factors using labels as levels, but only for suitable variables
@@ -42,3 +48,25 @@ read_eb <- function(df) {
   if(nas_after - nas_before > 0) warning("Applying labels resulted in NAs")
   df
 }
+
+get_matching_files <- function(folder, doi) {
+
+  existing_files <- list.files(folder, full.names = TRUE)
+  matching_files <- str_sub(basename(existing_files), 3, 6) %in% doi
+  existing_files[matching_files]
+}
+
+head_eb <- function(df_list, var_list, original_var_name = FALSE, n = 5) {
+
+  if(original_var_name) {
+    mapply(
+      function(df, var) {
+        head(df[, which(attr(df, "original_var_name") == var)], n)
+      },
+      df = df_list,
+      var = var_list
+    )
+    } else {
+      mapply(function(df, var) head(df[var], n), df = df_list, var = var_list)
+    }
+  }

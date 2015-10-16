@@ -12,21 +12,28 @@ lapply(existing_files, function(x) {
 
 })
 
-test <- read_eb("data_raw/EB/ZA3388_v1-1-0.dta")
-
-url <- "http://www.gesis.org/eurobarometer-data-service/topics-trends-question-retrieval/eb-trends-trend-files/list-of-trends/peaceful/"
-
-df_trend <- url %>%
-  read_html() %>%
-  html_node(xpath = "//table[@class='htmlarea-showtableborders']") %>%
-  html_table(header = TRUE)
+# Test: work with trends data ---------------------------------------------
 
 
-existing_files <- list.files("data_raw/EB", full.names = TRUE)
+if(!file.exists("data_clean/df_trends.RData")) {
+  df_trends <- get_trend_categories()
+  save(df_trends, file = "data_clean/df_trends.RData")
+}
 
-matching_files <- str_sub(basename(existing_files), 3, 6) %in%
-  as.character(df_trend$`ZA Study Number`)
+load("data_clean/df_trends.RData")
 
-df_list <- lapply(existing_files[matching_files], read_eb)
+trend_table <- df_trends %>% get_trend_tables("Trust in European institutions")
 
-lapply(df_list, find_var, "(peace - next year|next year - peace|Q114)")
+files <- get_matching_files("data_raw/eb", trend_table[[2]]$`ZA Study Number`)
+
+dfs <- lapply(files, read_eb)
+vars <- trend_table[[2]]$`Variable Name`
+
+vars <- lapply(dfs, function(x) find_var(x, "european central bank - trust"))
+
+index <- sapply(vars, function(x) length(nchar(x)) != 0)
+
+vars <- vars[index] %>% unlist()
+dfs <- dfs[index]
+
+head_eb(dfs, vars, FALSE)

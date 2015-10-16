@@ -13,12 +13,14 @@ get_trend_categories <- function() {
   main_category <- page %>%
     html_nodes(xpath = "//div[@id='c5197']/h4") %>%
     html_text() %>%
-    rep(times = category_lengths)
+    rep(times = category_lengths) %>%
+    str_trim()
 
   sub_category <- page %>%
     html_nodes(xpath = "//div[@id='c5197']/ul//li") %>%
     html_text() %>%
-    str_trim()
+    str_trim() %>%
+    iconv("utf-8", "latin1")
 
   url <- page %>%
     html_nodes(xpath = "//div[@id='c5197']/ul//li") %>%
@@ -29,11 +31,6 @@ get_trend_categories <- function() {
 
   df_trends <- data_frame(main_category, sub_category, url)
   df_trends
-}
-
-if(!file.exists("data_clean/df_trends.RData")) {
-  df_trends <- get_trend_categories()
-  save(df_trends, file = "data_clean/df_trends.RData")
 }
 
 browse_trends <- function(df, trend, ...) {
@@ -58,7 +55,11 @@ get_trend_tables <- function(df, trend) {
     x
     })
 
-  # Clean variables, drop all NA rows
+  # Drop degenerate tables with only one entry (due to website bugs)
+  keep_index <- vapply(list_tables, function(x) ncol(x) != 1, logical(1))
+  list_tables <- list_tables[keep_index]
+
+  # Clean variables, drop all NA rows and columns
   list_tables <- lapply(list_tables, function(df) {
     df[] <- apply(df, 2, function(x) iconv(x, "utf-8", "latin1"))
     df[] <- apply(df, 2, function(x) {
@@ -67,9 +68,16 @@ get_trend_tables <- function(df, trend) {
     df[] <- apply(df, 2, function(x) {
       ifelse(nchar(x) == 0, NA, x)
     })
-    df <- df[rowSums(is.na(df)) < ncol(df), ]
-    df
+    df <- df[rowSums(is.na(df)) < ncol(df), colSums(is.na(df)) < nrow(df)]
+    df <- df[!str_detect(df[,1], "[[:alpha:]]"), ]
   })
+
+  # Add leading zeroes to ZA Study number and replace V with v in variable name
+  for(i in seq_along(list_tables)) {
+    list_tables[[i]][, 1] <- formatC(as.numeric(list_tables[[i]][, 1]),
+                                     width = 4, flag = "0")
+    list_tables[[i]][, 6] <- str_replace(list_tables[[i]][, 6], "V", "v")
+  }
 
   # Set wording of respective question as attribute "question"
   # Will give NAs if only response options have changed
