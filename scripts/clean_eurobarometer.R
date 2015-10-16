@@ -1,7 +1,9 @@
 library(haven)
+library(labelled) # proper as_factor function
 
 apply_names <- function(df) {
     names(df) <- sapply(df, function(x) attr(x, "label"))
+    names(df) <- iconv(make.unique(names(df)))
     df
 }
 
@@ -9,18 +11,34 @@ apply_names <- function(df) {
 relabel_factors <- function(df) {
 
   index_relabel <- sapply(df, function(x) {
-    class(x) %nin% c("numeric", "integer") &
-    "<COUNTRY SPECIFIC>" %nin% names(attr(x, "labels"))
+    !class(x) %in% c("numeric", "integer") &
+    !"<COUNTRY SPECIFIC>" %in% names(attr(x, "labels"))
   })
 
   df[, index_relabel] <- df[, index_relabel] %>% mutate_each(funs(as_factor))
   df
 }
 
-find_var <- function(df, pattern) {
-  keep(names(df), ~ str_detect(.x, pattern))
+find_var <- function(df, pattern, ignore_case = TRUE) {
+  keep(names(df), ~ str_detect(.x, regex(pattern, ignore_case = ignore_case)))
 }
 
 labs <- function(variable) {
   attr(variable, "labels")
+}
+
+read_eb <- function(df) {
+
+  df <- read_dta(df)
+
+  df %<>% apply_names()
+
+  nas_before <- sum(is.na(df))
+
+  df %<>% relabel_factors()
+
+  nas_after <- sum(is.na(df))
+
+  if(nas_after - nas_before > 0) warning("Applying labels resulted in NAs")
+  df
 }
