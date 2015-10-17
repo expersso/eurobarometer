@@ -1,6 +1,12 @@
-library(haven)
+source("scripts/gesis.R")
+source("scripts/scrape_trends.R")
+source("scripts/clean_eurobarometer.R")
 
-df <- read_dta("data/ZA5878_v1-0-0.dta")
+df_trends <- get_trend_categories()
+trends <- df_trends %>% get_trend_tables("Trust in European institutions")
+
+df <- read_eb("data_raw/eb/ZA5928_v2-0-0.dta")
+find_var(df, "trust")
 
 # Use united DE and GB weights
 df$w1 <- ifelse(df$cntry_de == 1, df$w3,

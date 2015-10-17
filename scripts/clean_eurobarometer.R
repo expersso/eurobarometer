@@ -26,7 +26,8 @@ relabel_factors <- function(df) {
 }
 
 find_var <- function(df, pattern, ignore_case = TRUE) {
-  keep(names(df), ~ str_detect(.x, regex(pattern, ignore_case = ignore_case)))
+ purrr::keep(names(df),
+             ~ str_detect(.x, regex(pattern, ignore_case = ignore_case)))
 }
 
 labs <- function(variable) {
