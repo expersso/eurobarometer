@@ -68,13 +68,18 @@ head_eb <- function(df_list, var_list, original_var_name = FALSE, n = 5) {
     }
   }
 
-convert_eb_to_rdata <- function(file, save_dir) {
+convert_eb_to_rdata <- function(file, save_dir, eb_info) {
 
   filename <- tools::file_path_sans_ext(basename(file))
-  doi <- str_sub(filename, 1, 6)
+  doi <- str_sub(filename, 3, 6)
   df <- read_eb(file)
 
-  filename_save <- paste0(save_dir, doi, ".Rdata")
+  # Set doi and eb attributes
+  attr(df, "doi") <- doi
+  attr(df, "eb") <- eb_info$eb_number[match(doi, eb_info$doi)]
+
+  # Save as .RData file
+  filename_save <- paste0(save_dir, "ZA", doi, ".Rdata")
   message("Saving: ", filename_save)
   save(df, file = filename_save)
   rm(df, doi)
@@ -112,13 +117,6 @@ get_eb_info <- function() {
   eb_info[, c("doi", "eb_number", "collection_date")]
 }
 
-set_eb_attributes <- function(df_list, eb_info) {
-
-  for(i in seq_along(names(df_list))) {
-    doi <- str_extract(names(df_list)[i], "[0-9]{4}")
-    attr(df_list[[i]], "doi") <- doi
-    attr(df_list[[i]], "eb") <- eb_info$eb_number[match(doi, eb_info$doi)]
-  }
-
-  df_list
+load_eb_files <- function(eb_files) {
+  vapply(eb_files, function(x) mget(load(x)), FUN.VALUE = vector("list", 1L))
 }

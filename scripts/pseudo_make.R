@@ -17,7 +17,7 @@ if(!dir.exists("data_raw/eb")) {
 if(!dir.exists("data_clean/eb")) {
   dir.create("data_clean/eb")
   dta_files <- list.files("data_raw/eb", "*.dta", full.names = TRUE)
-  for(file in dta_files) convert_eb_to_rdata(file, "data_clean/eb/")
+  for(file in dta_files) convert_eb_to_rdata(file, "data_clean/eb/", eb_info)
 }
 
 # Get trends functions -----------------------------------------------------
@@ -25,7 +25,5 @@ source("scripts/trends.R")
 
 # Load all data frames ----------------------------------------------------
 eb_files <- list.files("data_clean/eb/", full.names = TRUE)
-dfl <- vapply(eb_files,
-              function(x) mget(load(x)), FUN.VALUE = vector("list", 1L))
 
-dfl <- set_eb_attributes(dfl, eb_info)
+dfl <- load_eb_files(eb_files)

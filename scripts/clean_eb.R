@@ -1,18 +1,13 @@
 # Test: work with trends data ---------------------------------------------
 
-
-if(!file.exists("data_clean/df_trends.RData")) {
-  df_trends <- get_trend_categories()
-  save(df_trends, file = "data_clean/df_trends.RData")
-}
-
-load("data_clean/df_trends.RData")
+df_trends <- get_trend_categories()
 
 trend_table <- df_trends %>% get_trend_tables("Trust in European institutions")
 
-files <- get_matching_files("data_raw/eb", trend_table[[2]]$`ZA Study Number`)
+files <- get_matching_files("data_clean/eb/", trend_table[[2]]$`ZA Study Number`)
 
-dfs <- lapply(files, read_eb)
+dfs <- read_eb_files(files)
+
 vars <- trend_table[[2]]$`Variable Name`
 
 vars <- lapply(dfs, function(x) find_var(x, "european central bank - trust"))
