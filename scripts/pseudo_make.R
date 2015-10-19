@@ -19,11 +19,3 @@ if(!dir.exists("data_clean/eb")) {
   dta_files <- list.files("data_raw/eb", "*.dta", full.names = TRUE)
   for(file in dta_files) convert_eb_to_rdata(file, "data_clean/eb/", eb_info)
 }
-
-# Get trends functions -----------------------------------------------------
-source("scripts/trends.R")
-
-# Load all data frames ----------------------------------------------------
-eb_files <- list.files("data_clean/eb/", full.names = TRUE)
-
-dfl <- load_eb_files(eb_files)
