@@ -3,12 +3,21 @@ library(labelled) # proper as_factor function
 
 apply_names <- function(df) {
 
-  # Store original var names as attribute
+  # Original variable names stored as attributes
   attr(df, "original_var_name") <- names(df)
 
   # Apply variable names stored as attribute "label"
   names(df) <- sapply(df, function(x) attr(x, "label"))
   names(df) <- iconv(make.unique(names(df)))
+
+  # Store DOI as attribute
+  doi <- formatC(unique(df[[1]]), width = 4, flag = "0")
+
+  if(length(doi) != 1) {
+    warning("DOI not unique!")
+  } else {
+    attr(df, "doi") <- doi
+  }
 
   df
 }
@@ -30,19 +39,15 @@ find_var <- function(df, pattern, ignore_case = TRUE) {
              ~ str_detect(.x, regex(pattern, ignore_case = ignore_case)))
 }
 
-labs <- function(variable) {
-  attr(variable, "labels")
-}
-
 read_eb <- function(df) {
 
   df <- read_dta(df)
 
-  df %<>% apply_names()
+  df <- apply_names(df)
 
   nas_before <- sum(is.na(df))
 
-  df %<>% relabel_factors()
+  df<- relabel_factors(df)
 
   nas_after <- sum(is.na(df))
 
@@ -71,3 +76,47 @@ head_eb <- function(df_list, var_list, original_var_name = FALSE, n = 5) {
       mapply(function(df, var) head(df[var], n), df = df_list, var = var_list)
     }
   }
+
+convert_eb_to_rdata <- function(file, save_dir) {
+
+  filename <- tools::file_path_sans_efilet(basename(file))
+  doi <- str_sub(filename, 1, 6)
+  assign(doi, read_eb(file))
+  data <- get(doi)
+  filename_save <- paste0(save_dir, doi, ".Rdata")
+  message("Saving: ", filename_save)
+  save(data, file = filename_save)
+  rm(data, doi)
+}
+
+get_eb_info <- function() {
+
+  url <- "https://dbk.gesis.org/dbksearch/SDesc2.asp?ll=10&notabs=1&no=0986"
+
+  eb_info <- xml2::read_html(url)
+  eb_info <- xml2::xml_find_all(eb_info,
+                                "//li[contains(text(), 'Eurobarometer')]")
+  eb_info <- xml2::xml_text(eb_info)[-c(1:3)]
+  eb_info <- data.frame(title = str_trim(eb_info), stringsAsFactors = FALSE)
+
+  eb_info$doi <- as.numeric(str_sub(eb_info$title, 1, 4))
+
+  eb_info$title <- str_replace(eb_info$title, "[0-9]{4} ", "")
+  eb_info$title <- str_replace(eb_info$title, "Eurobarometer ", "EB")
+
+  # Drop trend files
+  eb_info <- eb_info[str_detect(eb_info$title, "EB[0-9]"), ]
+
+  # Separate title into eb_number and collection_date, clean these up
+  eb_info <- separate(eb_info, title, c("eb_number", "collection_date"),
+                      sep = "( \\()", fill = "right")
+
+  eb_info$collection_date <- str_trim(
+    str_replace_all(eb_info$collection_date, "[()]", ""))
+
+  eb_info$eb_number <- str_replace_all(eb_info$eb_number, "[[:blank:]]", "")
+
+  eb_info$doi <- str_pad(eb_info$doi, 4, pad = "0")
+
+  eb_info[, c("doi", "eb_number", "collection_date")]
+}

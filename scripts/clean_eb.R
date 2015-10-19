@@ -1,17 +1,3 @@
-if(!dir.exists("data/rdata")) dir.create("data/rdata")
-eb_clean <- src_sqlite("data/eb_clean.sqlite", TRUE)
-
-existing_files <- list.files("data", "*.dta", full.names = TRUE)
-
-lapply(existing_files, function(x) {
-
-  doi <- str_sub(tools::file_path_sans_ext(basename(x)), 1, 6)
-  df <-  relabel_factors(apply_names(read_dta(x)))
-  copy_to(eb_clean, df, doi, temporary= FALSE)
-  # save(df, file = paste0("data/rdata/", doi, ".Rdata"))
-
-})
-
 # Test: work with trends data ---------------------------------------------
 
 

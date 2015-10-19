@@ -1,15 +1,11 @@
-### Download all EB files (in .dta format)
+### Download all eb files (in .dta format)
 
-load("data_clean/eb_info.RData") # data frame with EB names and links
 source("data_raw/gesis_login_detail.R") # gesis login details
-source("scripts/gesis.R") # gesis Selenium download functions
 
-if(!dir.exists("data_raw/EB")) dir.create("data_raw/EB")
-
-gesis_remDr <- setup_gesis(download_dir = "data_raw/EB")
+gesis_remDr <- setup_gesis(download_dir = "data_raw/eb/")
 login_gesis(gesis_remDr, getOption("gesis_user"), getOption("gesis_pass"))
 
-existing_files <- list.files("data_raw/EB") %>% str_sub(3, 6)
+existing_files <- list.files("data_raw/eb/") %>% str_sub(3, 6)
 remaining_files <- eb_info$doi[eb_info$doi %nin% existing_files]
 remaining_files <- remaining_files[remaining_files != "4565"] # Weird zip file
 
@@ -24,14 +20,14 @@ gesis_remDr$close()
 gesis_remDr$closeServer()
 
 # Deal with single file stored as ".dta.zip"
-if(!file.exists("data_raw/EB/ZA4565_v4-0-1.dta")) {
+if(!file.exists("data_raw/eb/ZA4565_v4-0-1.dta")) {
 
-  gesis_remDr <- setup_gesis(download_dir = "data_raw/EB", "application/zip")
+  gesis_remDr <- setup_gesis(download_dir = "data_raw/eb/", "application/zip")
   login_gesis(gesis_remDr, getOption("gesis_user"), getOption("gesis_pass"))
   try(download_dataset(gesis_remDr, "4565", "dta"), silent = TRUE)
   gesis_remDr$close()
   gesis_remDr$closeServer()
 
-  unzip("data_raw/EB/ZA4565_v4-0-1.dta.zip", exdir = "data_raw/EB")
-  file.remove("data_raw/EB/ZA4565_v4-0-1.dta.zip")
+  unzip("data_raw/eb/ZA4565_v4-0-1.dta.zip", exdir = "data_raw/eb")
+  file.remove("data_raw/eb/ZA4565_v4-0-1.dta.zip")
 }
