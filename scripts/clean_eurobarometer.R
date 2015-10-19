@@ -10,15 +10,6 @@ apply_names <- function(df) {
   names(df) <- sapply(df, function(x) attr(x, "label"))
   names(df) <- iconv(make.unique(names(df)))
 
-  # Store DOI as attribute
-  doi <- formatC(unique(df[[1]]), width = 4, flag = "0")
-
-  if(length(doi) != 1) {
-    warning("DOI not unique!")
-  } else {
-    attr(df, "doi") <- doi
-  }
-
   df
 }
 
@@ -79,14 +70,14 @@ head_eb <- function(df_list, var_list, original_var_name = FALSE, n = 5) {
 
 convert_eb_to_rdata <- function(file, save_dir) {
 
-  filename <- tools::file_path_sans_efilet(basename(file))
+  filename <- tools::file_path_sans_ext(basename(file))
   doi <- str_sub(filename, 1, 6)
-  assign(doi, read_eb(file))
-  data <- get(doi)
+  df <- read_eb(file)
+
   filename_save <- paste0(save_dir, doi, ".Rdata")
   message("Saving: ", filename_save)
-  save(data, file = filename_save)
-  rm(data, doi)
+  save(df, file = filename_save)
+  rm(df, doi)
 }
 
 get_eb_info <- function() {
@@ -96,7 +87,7 @@ get_eb_info <- function() {
   eb_info <- xml2::read_html(url)
   eb_info <- xml2::xml_find_all(eb_info,
                                 "//li[contains(text(), 'Eurobarometer')]")
-  eb_info <- xml2::xml_text(eb_info)[-c(1:3)]
+  eb_info <- xml2::xml_text(eb_info)[-1]
   eb_info <- data.frame(title = str_trim(eb_info), stringsAsFactors = FALSE)
 
   eb_info$doi <- as.numeric(str_sub(eb_info$title, 1, 4))
@@ -119,4 +110,15 @@ get_eb_info <- function() {
   eb_info$doi <- str_pad(eb_info$doi, 4, pad = "0")
 
   eb_info[, c("doi", "eb_number", "collection_date")]
+}
+
+set_eb_attributes <- function(df_list, eb_info) {
+
+  for(i in seq_along(names(df_list))) {
+    doi <- str_extract(names(df_list)[i], "[0-9]{4}")
+    attr(df_list[[i]], "doi") <- doi
+    attr(df_list[[i]], "eb") <- eb_info$eb_number[match(doi, eb_info$doi)]
+  }
+
+  df_list
 }

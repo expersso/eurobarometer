@@ -6,12 +6,12 @@ gesis_remDr <- setup_gesis(download_dir = "data_raw/eb/")
 login_gesis(gesis_remDr, getOption("gesis_user"), getOption("gesis_pass"))
 
 existing_files <- list.files("data_raw/eb/") %>% str_sub(3, 6)
-remaining_files <- eb_info$doi[eb_info$doi %nin% existing_files]
+remaining_files <- setdiff(eb_info$doi, existing_files)
 remaining_files <- remaining_files[remaining_files != "4565"] # Weird zip file
 
 lapply(remaining_files, function(x) {
 
-  cat("Downloading DOI: ", x, " - ", format(Sys.time()), "\n", sep = "")
+  message("Downloading DOI: ", x, " - ", format(Sys.time()), "\n", sep = "")
   download_dataset(gesis_remDr, x, "dta")
 
 })
