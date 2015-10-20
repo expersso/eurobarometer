@@ -30,15 +30,15 @@ find_var <- function(df, pattern, ignore_case = TRUE) {
              ~ str_detect(.x, regex(pattern, ignore_case = ignore_case)))
 }
 
-read_eb <- function(df) {
+read_eb <- function(file) {
 
-  df <- read_dta(df)
+  df <- read_dta(file)
 
   df <- apply_names(df)
 
   nas_before <- sum(is.na(df))
 
-  df<- relabel_factors(df)
+  df <- relabel_factors(df)
 
   nas_after <- sum(is.na(df))
 
@@ -46,43 +46,24 @@ read_eb <- function(df) {
   df
 }
 
-get_matching_files <- function(folder, doi) {
-
-  existing_files <- list.files(folder, full.names = TRUE)
-  matching_files <- str_sub(basename(existing_files), 3, 6) %in% doi
-  existing_files[matching_files]
-}
-
-head_eb <- function(df_list, var_list, original_var_name = FALSE, n = 5) {
-
-  if(original_var_name) {
-    mapply(
-      function(df, var) {
-        head(df[, which(attr(df, "original_var_name") == var)], n)
-      },
-      df = df_list,
-      var = var_list
-    )
-    } else {
-      mapply(function(df, var) head(df[var], n), df = df_list, var = var_list)
-    }
-  }
-
-convert_eb_to_rdata <- function(file, save_dir, eb_info) {
+convert_eb_to_rdata <- function(file, save_dir, eb_info, ...) {
 
   filename <- tools::file_path_sans_ext(basename(file))
   doi <- str_sub(filename, 3, 6)
   df <- read_eb(file)
 
-  # Set doi and eb attributes
+  # Set attributes from eb_info
   attr(df, "doi") <- doi
-  attr(df, "eb") <- eb_info$eb_number[match(doi, eb_info$doi)]
+  attr(df, "title") <- eb_info$title[match(doi, eb_info$doi)]
+  attr(df, "subtitle") <- eb_info$subtitle[match(doi, eb_info$doi)]
+  attr(df, "coll_date_mid") <- eb_info$coll_date_mid[match(doi, eb_info$doi)]
+  attr(df, "start_date") <- eb_info$start_date[match(doi, eb_info$doi)]
+  attr(df, "end_date") <- eb_info$end_date[match(doi, eb_info$doi)]
 
   # Save as .RData file
   filename_save <- paste0(save_dir, "ZA", doi, ".Rdata")
   message("Saving: ", filename_save)
-  save(df, file = filename_save)
-  rm(df, doi)
+  save(df, file = filename_save, ...)
 }
 
 get_eb_info <- function() {
@@ -91,9 +72,11 @@ get_eb_info <- function() {
 
   eb_info <- xml2::read_html(url)
   eb_info <- xml2::xml_find_all(eb_info,
-                                "//li[contains(text(), 'Eurobarometer')]")
-  eb_info <- xml2::xml_text(eb_info)[-1]
-  eb_info <- data.frame(title = str_trim(eb_info), stringsAsFactors = FALSE)
+                                "//a[string-length(text()) = 4]//parent::li")
+  eb_info <- xml_text(eb_info)
+
+  eb_info <- data.frame(title = stringr::str_trim(eb_info),
+                        stringsAsFactors = FALSE)
 
   eb_info$doi <- as.numeric(str_sub(eb_info$title, 1, 4))
 
@@ -101,22 +84,36 @@ get_eb_info <- function() {
   eb_info$title <- str_replace(eb_info$title, "Eurobarometer ", "EB")
 
   # Drop trend files
-  eb_info <- eb_info[str_detect(eb_info$title, "EB[0-9]"), ]
+  keep_index <- str_detect(eb_info$title,
+             "EB[0-9]|European Communities Study|Attitudes towards Europe")
+  eb_info <- eb_info[keep_index, ]
 
-  # Separate title into eb_number and collection_date, clean these up
-  eb_info <- separate(eb_info, title, c("eb_number", "collection_date"),
-                      sep = "( \\()", fill = "right")
-
-  eb_info$collection_date <- str_trim(
-    str_replace_all(eb_info$collection_date, "[()]", ""))
-
-  eb_info$eb_number <- str_replace_all(eb_info$eb_number, "[[:blank:]]", "")
+  # Drop dates in parentheses
+  eb_info$title <- stringr::str_trim(
+    stringr::str_replace_all(eb_info$title, "\\(.*\\)", "")
+    )
 
   eb_info$doi <- str_pad(eb_info$doi, 4, pad = "0")
 
-  eb_info[, c("doi", "eb_number", "collection_date")]
+  eb_info[, c("doi", "title")]
 }
 
-load_eb_files <- function(eb_files) {
-  vapply(eb_files, function(x) mget(load(x)), FUN.VALUE = vector("list", 1L))
+get_metadata <- function(doi, metadata) {
+
+  base_url <- "https://dbk.gesis.org/dbksearch/SDesc2.asp?ll=10&notabs=1&no=%s"
+  url <- sprintf(base_url, doi)
+  page <- xml2::read_html(url)
+
+  output_list <- lapply(metadata, function(meta_text) {
+
+    base_xpath <- "//td[contains(text(), '%s')]//following-sibling::td"
+    xpath <- sprintf(base_xpath, meta_text)
+
+    output <- xml2::xml_text(xml2::xml_find_all(page, xpath))
+    output <- stringr::str_trim(output[length(output)])
+    output
+  })
+
+  names(output_list) <- unlist(metadata)
+  as.data.frame(t(output_list), stringsAsFactors = FALSE)
 }
