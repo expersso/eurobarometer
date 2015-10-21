@@ -25,11 +25,6 @@ relabel_factors <- function(df) {
   df
 }
 
-find_var <- function(df, pattern, ignore_case = TRUE) {
- purrr::keep(names(df),
-             ~ str_detect(.x, regex(pattern, ignore_case = ignore_case)))
-}
-
 read_eb <- function(file) {
 
   df <- read_dta(file)

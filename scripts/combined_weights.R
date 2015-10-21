@@ -1,9 +1,3 @@
-source("scripts/scrape_trends.R")
-source("scripts/eurobarometer_utils.R")
-
-df_trends <- get_trend_categories()
-trends <- df_trends %>% get_trend_tables("Trust in European institutions")
-
 load("data_clean/eb/ZA5928.RData")
 
 # Use united DE and GB weights
@@ -20,33 +14,18 @@ df$iso2c <- as.character(df$`COUNTRY CODE - ISO 3166`)
 df$iso2c[df$`NATION - UNITED GERMANY` == "Germany"] <- "DE"
 df$iso2c[df$`NATION - UNITED KINGDOM` == "United Kingdom"] <- "GB"
 
-# Creates data frame with aggregation group, question, share of responses
-get_response <- function(data, group, question, weights, aggregation = NULL) {
-
-  # If aggregating to e.g. "EU28"
-  if(!is.null(aggregation)) {
-    data[[group]] <- aggregation
-  }
-
-  df <- data %>%
-    group_by(group = .[[group]]) %>%
-    do(value = sapply(levels(.[[question]]), function(x) {
-      sum((.[[question]] == x) * .[[weights]], na.rm = TRUE) / sum(.[[weights]])})) %>%
-    unnest(value)
-
-  df$response <- levels(data[[question]])
-  df
-}
 
 df_all <- rbind(
-  get_response(df, "iso2c", "EUROPEAN CENTRAL BANK - TRUST", "main_weight"),
-  get_response(df, "iso2c", "EUROPEAN CENTRAL BANK - TRUST", "WEIGHT EU28", "EU28"),
-  get_response(df, "iso2c", "EUROPEAN CENTRAL BANK - TRUST", "WEIGHT EURO ZONE 18",
-               "EA")
+  calc_share(df, "iso2c", "TRUST IN INSTITUTIONS: UNITED NATIONS",
+             "main_weight"),
+  calc_share(df, "iso2c", "TRUST IN INSTITUTIONS: UNITED NATIONS",
+             "WEIGHT EU28", "EU28"),
+  calc_share(df, "iso2c", "TRUST IN INSTITUTIONS: UNITED NATIONS",
+             "WEIGHT EURO ZONE 18", "EA")
   )
 
 all_na_cntry <- df_all %>%
-  group_by(group) %>%
+  group_by(group, coll_date_mid) %>%
   summarize(all_zero = sum(value) == 0) %>%
   filter(all_zero) %>%
   .$group
@@ -55,7 +34,7 @@ cntryorder <- df_all %>%
   filter(!group %in% all_na_cntry) %>%
   filter(response == "Tend to trust") %>%
   arrange(value) %>%
-  .$group)
+  .$group
 
 df_all %>%
   filter(!group %in% all_na_cntry) %>%
