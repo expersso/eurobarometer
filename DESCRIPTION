@@ -1,0 +1,10 @@
+Package: eurobarometer
+Title: All Eurobarometer Waves in Clean R-Native Format
+Version: 0.0.0.9000
+Authors@R: person("Eric", "Persson", email = "expersso5@gmail.com", role = c("aut", "cre"))
+Description: Contains all Eurobarometer waves as .RData files, with meaningful
+  variable names, factor labels, and metadata. Size compressed by approximately
+  90% from original.
+Depends: R (>= 3.2.2)
+License: CCO
+LazyData: true
