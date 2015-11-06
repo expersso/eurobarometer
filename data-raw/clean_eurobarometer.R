@@ -13,19 +13,21 @@ apply_names <- function(df) {
 # Create factors using labels as levels, but only for suitable variables
 relabel_factors <- function(df) {
 
+  library(labelled) # This needs to be in there for as_factor
+
   index_relabel <- sapply(df, function(x) {
     !class(x) %in% c("numeric", "integer") &
     !"<COUNTRY SPECIFIC>" %in% names(attr(x, "labels"))
   })
 
   df[, index_relabel] <- df[, index_relabel] %>%
-    mutate_each(funs(labelled::as_factor))
+    mutate_each(funs(as_factor))
   df
 }
 
 read_eb <- function(file) {
 
-  df <- read_dta(file)
+  df <- haven::read_dta(file)
 
   df <- apply_names(df)
 
