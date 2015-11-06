@@ -40,14 +40,9 @@ if(!file.exists("data/eb_info.RData")) {
 load("data/eb_info.RData")
 
 # Loop over DOIs in eb_info table, download all EBs to data-raw/eb --------
-if(!dir.exists("data-raw/eb")) {
-  dir.create("data-raw/eb")
-  source("data-raw/download_eb.R")
-}
+source("data-raw/download_eb.R")
 
 # Clean and convert all .dta files to .RData files in data/eb -------
-if(!dir.exists("data/eb")) {
-  dir.create("data/eb")
-  dta_files <- list.files("data-raw/eb", "*.dta", full.names = TRUE)
-  for(file in dta_files) convert_eb_to_rdata(file, "data/eb/", eb_info)
-}
+
+dta_files <- list.files("data-raw/eb", "*.dta", full.names = TRUE)
+for(file in dta_files) convert_eb_to_rdata(file, "data/", eb_info)

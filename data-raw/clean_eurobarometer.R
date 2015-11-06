@@ -45,6 +45,7 @@ convert_eb_to_rdata <- function(file, save_dir, eb_info, ...) {
 
   filename <- tools::file_path_sans_ext(basename(file))
   doi <- str_sub(filename, 3, 6)
+  df_name <- paste0("ZA", doi)
   df <- read_eb(file)
 
   # Set attributes from eb_info
@@ -56,9 +57,13 @@ convert_eb_to_rdata <- function(file, save_dir, eb_info, ...) {
   attr(df, "end_date") <- eb_info$end_date[match(doi, eb_info$doi)]
 
   # Save as .RData file
-  filename_save <- paste0(save_dir, "ZA", doi, ".Rdata")
+  assign(df_name, df)
+  if(str_sub(save_dir, -1, -1) == "/") { # Remove trailing slash
+    save_dir <- str_sub(save_dir, 1, -2)
+  }
+  filename_save <- paste0(save_dir, "/ZA", doi, ".RData")
   message("Saving: ", filename_save)
-  save(df, file = filename_save, ...)
+  save(list = df_name, file = filename_save)
 }
 
 get_eb_info <- function() {
