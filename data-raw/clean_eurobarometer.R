@@ -37,7 +37,7 @@ read_eb <- function(file) {
 
   nas_after <- sum(is.na(df))
 
-  if(nas_after - nas_before > 0) warning("Applying labels resulted in NAs")
+  if(nas_after - nas_before > 0) stop("Applying labels resulted in NAs")
   df
 }
 
