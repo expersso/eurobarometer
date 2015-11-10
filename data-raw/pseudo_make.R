@@ -30,8 +30,8 @@ if(!file.exists("data/eb_info.RData")) {
                             paste0("01.", .), .)), start_date, end_date) %>%
     mutate_each(funs(as.Date(., "%d.%m.%Y")), start_date, end_date) %>%
     rowwise() %>%
-    mutate(coll_date_mid = mean(c(start_date, end_date))) %>%
-    select(doi, title, subtitle, coll_date_mid, start_date, end_date)
+    mutate(date = lubridate::floor_date(mean(c(start_date, end_date)), "day")) %>%
+    select(doi, title, subtitle, date, start_date, end_date)
 
   save(eb_info, file = "data/eb_info.RData")
 }

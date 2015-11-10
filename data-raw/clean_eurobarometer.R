@@ -1,10 +1,17 @@
-apply_names <- function(df) {
+apply_names <- function(df, ext) {
 
   # Original variable names stored as attributes
   attr(df, "original_var_name") <- names(df)
 
   # Apply variable names stored as attribute "label"
+  if(ext == "dta") {
   names(df) <- sapply(df, function(x) attr(x, "label"))
+  }
+
+  if(ext == "sav") {
+    names(df) <- attr(df, "variable.labels")
+  }
+
   names(df) <- iconv(make.unique(names(df)))
 
   df
@@ -27,17 +34,30 @@ relabel_factors <- function(df) {
 
 read_eb <- function(file) {
 
-  df <- haven::read_dta(file)
+  ext <- tools::file_ext(file)
 
-  df <- apply_names(df)
+  if(ext == "dta") {
+    df <- haven::read_dta(file)
+  }
 
-  nas_before <- sum(is.na(df))
+  if(ext == "sav") {
+    df <- suppressWarnings(foreign::read.spss(file))
+  }
 
-  df <- relabel_factors(df)
+  df <- apply_names(df, ext)
 
-  nas_after <- sum(is.na(df))
+  if(ext == "dta") {
+    nas_before <- sum(is.na(df))
+    df <- relabel_factors(df)
+    nas_after <- sum(is.na(df))
+    if(nas_after - nas_before > 0) stop("Applying labels resulted in NAs")
+  }
 
-  if(nas_after - nas_before > 0) stop("Applying labels resulted in NAs")
+  if(ext == "sav") {
+    df <- as.data.frame(df)
+    class(df) <- c("tbl_df", "tbl", "data.frame")
+  }
+
   df
 }
 
@@ -52,7 +72,7 @@ convert_eb_to_rdata <- function(file, save_dir, eb_info, ...) {
   attr(df, "doi") <- doi
   attr(df, "title") <- eb_info$title[match(doi, eb_info$doi)]
   attr(df, "subtitle") <- eb_info$subtitle[match(doi, eb_info$doi)]
-  attr(df, "coll_date_mid") <- eb_info$coll_date_mid[match(doi, eb_info$doi)]
+  attr(df, "date") <- eb_info$date[match(doi, eb_info$doi)]
   attr(df, "start_date") <- eb_info$start_date[match(doi, eb_info$doi)]
   attr(df, "end_date") <- eb_info$end_date[match(doi, eb_info$doi)]
 
